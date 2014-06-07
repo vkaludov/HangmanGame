@@ -1,0 +1,247 @@
+import java.util.Scanner;
+
+public class HangmanBody {
+	String[] gallows = drawGallows();
+
+	public static void LoadTheGameScreen(int difficulty, String[] randomWord) {
+		/*
+		 * Clears the console
+		 */	
+		final String ANSI_CLS = "\u001b[2J";
+        final String ANSI_HOME = "\u001b[H";
+        System.out.print(ANSI_CLS + ANSI_HOME);
+        System.out.flush();	
+
+		String word = randomWord[0].toUpperCase();
+		String hint = randomWord[1];
+		String[] gallows = drawGallows();
+		/*
+		 * hiddenWord will be our "---------" where we have to guess the real
+		 * word.
+		 */
+		char[] hiddenWord = new char[word.length()];
+		String lettersUsed = "";
+		int timesTried = 0;
+
+		/*
+		 * Depending on the difficulty, chosen by the user, there will be a
+		 * different scenario. TimesTried will not always be the same and the
+		 * first screen with the gallows will also be different in the three
+		 * cases.
+		 */
+		if (timesTried == 10) {
+
+			Lose(word);
+
+		} else {
+			if (difficulty == 1) {
+				
+				System.out.println("You chose difficulty 1: You have 10 tries to guess the word. "
+						+ "You will also have a hint for the word that you have to guess.");
+				System.out.println("\n");
+				System.out.println("Let's see if you are smart enough to guess the word.");	
+				System.out.println();
+				timesTried = 0;
+				System.out.println(gallows[0]);
+			} else if (difficulty == 2) {
+				
+				System.out.println("You chose difficulty 2: You have 7 tries to guess the word. "
+						+ "You will also have a hint for the word that you have to guess.");
+				System.out.println("\n");
+				System.out.println("Let's see if you are smart enough to guess the word.");	
+				System.out.println();
+				timesTried = 3;
+				System.out.println(gallows[3]);
+			} else if (difficulty == 3) {
+				
+				System.out.println("You chose difficulty 3: You have 5 tries to guess the word, "
+						+ "otherwise you lose.");
+				System.out.println("\n");
+				System.out.println("Let's see if you are smart enough to guess the word.");				
+				System.out.println();
+				timesTried = 5;
+				System.out.println(gallows[5]);
+			}							 
+	        	        
+			
+			/*
+			 * The for cycle fills the hidden word with '-' that are equal to
+			 * the word's length. If there are two words in the word the if/else
+			 * statement will separate them with a ' '.
+			 */
+			for (int i = 0; i < word.length(); i++) {
+				if (word.toCharArray()[i] == ' ') {
+					hiddenWord[i] = ' ';
+				} else {
+					hiddenWord[i] = '-';
+				}
+			}
+			System.out.println();
+			for (int j = 0; j < hiddenWord.length; j++) {
+				System.out.print(hiddenWord[j]);
+			}
+			System.out.println();
+			/*
+			 * The method Guess calls itself so that the user can continue
+			 * inputting letters until he has guessed the word or until
+			 * timesTried has reached 10.
+			 */
+			Guess(timesTried, word, hint, difficulty, hiddenWord, gallows,
+					lettersUsed, randomWord);
+		}
+	}
+
+	private static void Guess(int timesTried, String word, String hint, int difficulty,
+			char hiddenWord[], String[] gallows, String lettersUsed, String[] randomWord) {
+
+		String guessWord = new String(hiddenWord);		
+
+		if (guessWord.equals(word)) {
+
+			Win();
+
+		} else if (timesTried == 10) {
+			
+			Lose(word);
+
+		} else {
+			if (difficulty == 3) {
+				System.out.print("Enter a letter: ");
+			} else {
+				System.out.print("Enter a letter(" + hint + "): ");
+			}
+			Scanner input = new Scanner(System.in);
+			char letter = input.next().toUpperCase().charAt(0);
+
+			/*
+			 * Call the CheckLetter Method
+			 */
+
+			timesTried = CheckLetter(timesTried, word, hiddenWord, letter);
+			
+			/*
+			 * Print the letters used on the screen without duplicates.
+			 */
+			if (lettersUsed.contains(Character.toString(letter))) {
+
+			} else {
+				lettersUsed += letter + ", ";
+			}
+
+			/*
+			 *  Clear console here
+			 */
+			
+			final String ANSI_CLS = "\u001b[2J";
+	        final String ANSI_HOME = "\u001b[H";
+	        System.out.print(ANSI_CLS + ANSI_HOME);
+	        System.out.flush();
+
+			MainScreen(timesTried, hiddenWord, gallows, lettersUsed);
+
+			Guess(timesTried, word, hint, difficulty, hiddenWord, gallows,
+					lettersUsed, randomWord);
+		}
+
+	}
+	
+	private static int CheckLetter(int timesTried, String word, char[] hiddenWord,
+			char letter) {
+		/*
+		 * Checks if the word contains the letter entered by the user.
+		 */
+		if (word.contains(Character.toString(letter))) {
+			for (int i = 0; i < word.length(); i++) {
+
+				if (word.toUpperCase().toCharArray()[i] == letter) {
+					hiddenWord[i] = letter;
+				}
+			}
+		} else {
+			timesTried += 1;
+			System.out.println();
+			System.out.println("Wrong letter !");
+		}
+		return timesTried;
+	}
+
+	private static void MainScreen(int timesTried, char[] hiddenWord,
+			String[] gallows, String lettersUsed) {
+		/*
+		 * Prints the gallows, the hidden word and the letters
+		 * used. It is the main screen before we input a letter.
+		 */
+		System.out.println();
+		System.out.println(gallows[timesTried]);
+		System.out.println();
+		System.out.print("Letters used: " + lettersUsed);
+		System.out.println("\n");
+		for (int i = 0; i < hiddenWord.length; i++) {
+			System.out.print(hiddenWord[i]);
+		}
+		System.out.println();
+	}	
+
+	private static String[] drawGallows() {
+		/*
+		 * Draws the Gallows step by step depending on timesTried.
+		 */
+
+		String gallows[] = new String[11];
+
+		// The base of the gallows.
+		String dashes = new String(new char[6]).replace("\0", "-");
+
+		gallows[0] = "";
+		gallows[1] = new String(new char[6]).replace("\0", "\n") + dashes;
+		gallows[2] = new String(new char[6]).replace("\0", " |\n") + dashes;
+		gallows[3] = " |---\n" + new String(new char[5]).replace("\0", " |\n")
+				+ dashes;
+		gallows[4] = " |---\n |  |\n"
+				+ new String(new char[4]).replace("\0", " |\n") + dashes;
+		gallows[5] = " |---\n |  |\n |  o\n"
+				+ new String(new char[3]).replace("\0", " |\n") + dashes;
+		gallows[6] = " |---\n |  |\n |  o\n |  |\n"
+				+ new String(new char[2]).replace("\0", " |\n") + dashes;
+		gallows[7] = " |---\n |  |\n |  o\n | /|\n"
+				+ new String(new char[2]).replace("\0", " |\n") + dashes;
+		gallows[8] = " |---\n |  |\n |  o\n | /|\\\n"
+				+ new String(new char[2]).replace("\0", " |\n") + dashes;
+		gallows[9] = " |---\n |  |\n |  o\n | /|\\\n | /\n"
+				+ new String(new char[1]).replace("\0", " |\n") + dashes;
+		gallows[10] = " |---\n |  |\n |  o\n | /|\\\n | / \\\n"
+				+ new String(new char[1]).replace("\0", " |\n") + dashes;
+		return gallows;
+	}
+	
+	private static void Lose(String word) {
+
+		System.out.println("SMART ENOUGH YOU ARE NOT, LOST YOU HAVE!!! The word was: " + word);
+		System.out.print("\nPlay again, you want?(Y/N): ");
+		
+		Scanner input = new Scanner(System.in);
+		String userChoice = input.next().toUpperCase();
+		if (userChoice.contains("Y")) {
+			HangmanMain.StartTheGame();
+		} else {
+		}
+
+	}
+
+	private static void Win() {
+
+		System.out.println("\n\n\\o/\n | \n/ \\");
+		System.out.println("SMART YOU ARE, WON YOU HAVE !");
+		System.out.print("\nPlay again, you want?(Y/N): ");
+
+		Scanner input = new Scanner(System.in);
+		String userChoice = input.next().toUpperCase();
+		if (userChoice.contains("Y")) {
+			HangmanMain.StartTheGame();
+		} else {
+		}
+
+	}
+}
+
+ 
